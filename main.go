@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/csv"
-	"os"
-
-	"golang.org/x/text/collate"
+	"github.com/gocolly/colly"
 )
 
 type ScrapConfig struct {
@@ -23,9 +20,20 @@ type WEBScrapper struct {
 	marketplace Marketplace
 }
 
-func (w WEBScrapper) scraping(m Marketplace) []string {
-	c := colly.NewCollector()
+type Product struct {
+	Name   string `json:"name"`
+	Price  string `json:"price"`
+	ImgURL string `json:"imgurl"`
+}
 
+func (w WEBScrapper) scraping(m Marketplace) []string {
+	c := colly.NewCollector(
+		colly.AllowedDomains("allegro.pl", "amazon.pl", "olx.pl"),
+	)
+
+	c.OnHTML("", func(e *colly.HTMLElement) {
+
+	})
 }
 
 func main() {
@@ -36,13 +44,5 @@ func main() {
 }
 
 func doMain() {
-
-	file, err := os.Create("result.csv")
-	if err != nil {
-		panic("unable to create result.csv")
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
 
 }
