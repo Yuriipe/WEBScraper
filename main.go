@@ -1,24 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gocolly/colly"
 )
-
-type ScrapConfig struct {
-	URL   string
-	Query string
-}
-
-type Marketplace struct {
-	Allegro []ScrapConfig
-	Olx     []ScrapConfig
-	Amazon  []ScrapConfig
-}
-
-type WEBScrapper struct {
-	cfg         ScrapConfig
-	marketplace Marketplace
-}
 
 type Product struct {
 	Name   string `json:"name"`
@@ -26,23 +12,22 @@ type Product struct {
 	ImgURL string `json:"imgurl"`
 }
 
-func (w WEBScrapper) scraping(m Marketplace) []string {
+func main() {
 	c := colly.NewCollector(
-		colly.AllowedDomains("allegro.pl", "amazon.pl", "olx.pl"),
+		colly.AllowedDomains("www.empik.com"),
 	)
 
-	c.OnHTML("", func(e *colly.HTMLElement) {
-
+	c.OnHTML("div.search-list-item", func(h *colly.HTMLElement) {
+		fmt.Println(h.Attr("data-product-name"))
+		fmt.Println(h.Attr("data-product-price"), "zł")
 	})
-}
 
-func main() {
-	if err := doMain(); err != nil {
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println(r.URL.String())
+	})
+
+	err := c.Visit("https://www.empik.com/szukaj/produkt?q=slime&qtype=basicForm&trending=true")
+	if err != nil {
 		panic(err)
 	}
-
-}
-
-func doMain() {
-
 }
