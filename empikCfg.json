@@ -1,7 +1,7 @@
 {
     "receiverCSV":"resultLocalDB/empikResult.csv",
     "scrapURL":"https://www.empik.com/szukaj/produkt?q=",
-    "headersCSV":"name, price, currency",
+    "headersCSV":"name, price, currency, image_url, image",
     "goQuery":"div.search-list-item",
     "productName":"data-product-name",
 	"productPrice":"data-product-price",
