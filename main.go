@@ -4,8 +4,10 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -21,20 +23,15 @@ type ScrapConfig struct {
 	GoQuery                string `json:"goQuery"`
 }
 
-// add user input for several options:
-// 2. choose the amount of scrapped pages
-// 3. cronjob possibility
-// a. name file like: "searchword_websiteResult.chosenFormat"
-// b. if the file does exist - add new price column with date to compare the previous price and the following one
-// c. also a column with price change percentage can be included
-// 4. output file type choise
-
 type Scraper interface {
 	scrapCFG()
 }
 
 func main() {
-	doMain()
+	if err := doMain(); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
 }
 
 func doMain() error {
@@ -42,6 +39,7 @@ func doMain() error {
 	path := cfgFileMenu()
 	s.scrapCFG(path)
 
+	fmt.Printf("Adding header to %s\n", s.ReceiverCSV)
 	header := strings.Split(s.HeaderCSV, ", ")
 	s.writeToCSV(header)
 
@@ -67,21 +65,19 @@ func cfgFileMenu() string {
 		result = "empikCfg.json"
 		fmt.Println("Running empik scrap")
 	case "2":
-		result = "not available yet"
-		fmt.Println("Not available yet\nExiting")
-		os.Exit(0)
+		result = ""
+		log.Fatal("Not available yet\nExiting")
 	case "3":
-		result = "not available yet"
-		fmt.Println("Not available yet\nExiting")
-		os.Exit(0)
+		result = ""
+		log.Fatal("Not available yet\nExiting")
 	}
 	return result
 }
 
 func searchWord() string {
 	var query string
-	fmt.Println("What product would you like to search for?\n(for search improvement give one word description)")
-	fmt.Scanln(&query)
+	fmt.Println("Search for product:")
+	fmt.Scan(&query)
 	return query
 }
 
@@ -89,13 +85,13 @@ func searchWord() string {
 func (s *ScrapConfig) scrapCFG(path string) error {
 	file, err := os.ReadFile(path)
 	if err != nil {
-		panic("unable to read cfg file")
+		log.Fatalln("unable to read cfg file", err, time.Now())
 	}
 
 	decoded := map[string]string{}
 	err = json.Unmarshal(file, &decoded)
 	if err != nil {
-		panic("unmarshall is not possible")
+		log.Fatalln("impossible to unmarshal cfg", err, time.Now())
 	}
 
 	for option, value := range decoded {
@@ -126,7 +122,7 @@ func (s *ScrapConfig) scrapCFG(path string) error {
 func (s *ScrapConfig) writeToCSV(result []string) error {
 	file, err := os.OpenFile(s.ReceiverCSV, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
 	if err != nil {
-		panic("unable to open receiverCSV")
+		log.Fatalln("unable to open receiver file", err, time.Now())
 	}
 	defer file.Close()
 
@@ -148,6 +144,12 @@ func (s *ScrapConfig) scrapHTML() error {
 		s.writeToCSV(response)
 	})
 
+	c.OnHTML("a.next", func(e *colly.HTMLElement) {
+		// Visit the next page's URL
+		link := e.Attr("href")
+		c.Visit(e.Request.AbsoluteURL(link))
+	})
+
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Start scrapping", r.URL.String())
 	})
@@ -156,7 +158,7 @@ func (s *ScrapConfig) scrapHTML() error {
 
 	err := c.Visit(strings.Join(query, ""))
 	if err != nil {
-		panic("unable to visit URL")
+		log.Println("unable to open:", s.ScrapURL, "; error:", err, time.Now())
 	}
 	return nil
 }

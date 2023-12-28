@@ -2,8 +2,6 @@ module scraper
 
 go 1.21.4
 
-require github.com/gocolly/colly v1.2.0
-
 require (
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
