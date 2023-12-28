@@ -1,6 +1,6 @@
 module scraper
 
-go 1.21.4
+go 1.21
 
 require github.com/gocolly/colly/v2 v2.1.0
 
