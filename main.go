@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/gocolly/colly/v2"
 )
 
 type ScrapConfig struct {
@@ -71,4 +73,17 @@ func (s *ScrapConfig) writeToCSV(result []string) error {
 	writer.Write(result)
 	writer.Flush()
 	return nil
+}
+
+func (s *ScrapConfig) scrapHTML () error{
+	c := colly.NewCollector(
+		colly.AllowedDomains(s.ScrapURL),
+	)
+
+	c.OnHTML("div/", func(h *colly.HTMLElement){
+		name := h.Attr("")
+		price := h.Attr("")
+	})
+
+	c.
 }
