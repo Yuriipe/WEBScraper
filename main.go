@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -21,8 +20,10 @@ type Scraper interface {
 	scrapCFG() string
 }
 
-func (s *ScrapConfig) scrapCFG() error {
-	file, err := os.OpenFile("empikCfg.json", os.O_RDONLY, 0644)
+// setting env variables
+func scrapCFG(path string) error {
+	s := &ScrapConfig{}
+	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -42,6 +43,7 @@ func (s *ScrapConfig) scrapCFG() error {
 	return nil
 }
 
+// writing scrap result to csv
 func (s ScrapConfig) writeHTMLToCSV(name string, price string) error {
 
 	file, err := os.OpenFile(s.ReceiverCSV, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
@@ -57,8 +59,9 @@ func (s ScrapConfig) writeHTMLToCSV(name string, price string) error {
 	return nil
 }
 
+// scraping from HTML
 func (s *ScrapConfig) scraping() error {
-	s.scrapCFG()
+	scrapCFG()
 
 	c := colly.NewCollector()
 
@@ -82,14 +85,27 @@ func (s *ScrapConfig) scraping() error {
 
 func main() {
 	s := ScrapConfig{}
+	s.scrapCFG("empikCfg.csv")
 
-	file, err := os.OpenFile(s.ReceiverCSV, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
+	file, err := os.OpenFile(s.ReceiverCSV, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		panic(err)
 	}
 
-	header := strings.Split(s.HeaderCSV, ",")
-	headerWriter := csv.NewWriter(file)
-	headerWriter.Write(header)
-	headerWriter.Flush()
+	defer file.Close()
+
+	w := csv.NewWriter(file)
+	tekst := []string{"new tekst", "to csv"}
+	w.Write(tekst)
+	w.Flush()
+
+	// file, err := os.Open(s.ReceiverCSV)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// header := strings.Split(s.HeaderCSV, ",")
+	// headerWriter := csv.NewWriter(file)
+	// headerWriter.Write(header)
+	// headerWriter.Flush()
 }

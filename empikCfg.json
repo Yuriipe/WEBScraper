@@ -1,5 +1,5 @@
 {
-    "receiverCSV":"scraper/resultLocalDB/empikResult.csv",
+    "receiverCSV":"/home/yubo/Documents/golang_projects/WEBScraper/resultLocalDB/empikResult.csv",
     "scrapURL":"https://www.empik.com/szukaj/produkt?q=slime&qtype=basicForm&trending=true",
     "headersCSV":"name, price"
 }
