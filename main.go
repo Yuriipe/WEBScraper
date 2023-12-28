@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -22,8 +23,13 @@ func main() {
 	s := ScrapConfig{}
 	path := "empikCfg.json"
 	s.scrapCFG(path)
-	fmt.Printf("this is %s", s.HeaderCSV)
+	fmt.Printf("This is a header %s\n", s.HeaderCSV)
 
+	header := strings.Split(s.HeaderCSV, ", ")
+	fmt.Println(header)
+	s.writeToCSV(header)
+	fmt.Println("Succesfully writen")
+	fmt.Println("Exiting program")
 }
 
 func (s *ScrapConfig) scrapCFG(path string) error {
@@ -40,7 +46,6 @@ func (s *ScrapConfig) scrapCFG(path string) error {
 
 	for option, value := range decoded {
 		os.Setenv(strings.ToUpper(option), value)
-		fmt.Printf("Variable %s was set to value: %s\n", option, value)
 		switch option {
 		case "headersCSV":
 			s.HeaderCSV = value
@@ -52,5 +57,18 @@ func (s *ScrapConfig) scrapCFG(path string) error {
 			s.SearchWord = value
 		}
 	}
+	return nil
+}
+
+func (s *ScrapConfig) writeToCSV(result []string) error {
+	file, err := os.OpenFile(s.ReceiverCSV, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
+	if err != nil {
+		panic("unable to open receiverCSV")
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	writer.Write(result)
+	writer.Flush()
 	return nil
 }
