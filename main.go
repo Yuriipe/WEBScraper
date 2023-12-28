@@ -11,13 +11,22 @@ import (
 )
 
 type ScrapConfig struct {
-	ReceiverCSV string `json:"receiverCSV"`
-	ScrapURL    string `json:"scrapURL"`
-	HeaderCSV   string `json:"headersCSV"`
+	ReceiverCSV            string `json:"receiverCSV"`
+	ScrapURL               string `json:"scrapURL"`
+	HeaderCSV              string `json:"headersCSV"`
+	ProductName            string `json:"productName"`
+	ProductPrice           string `json:"productPrice"`
+	ProductImage           string `json:"productImage"`
+	ProductImageAttributes string `json:"productImageAttributes"`
+	GoQuery                string `json:"goQuery"`
 }
 
 // add user input for several options:
+// 2. choose the amount of scrapped pages
 // 3. cronjob possibility
+// a. name file like: "searchword_websiteResult.chosenFormat"
+// b. if the file does exist - add new price column with date to compare the previous price and the following one
+// c. also a column with price change percentage can be included
 // 4. output file type choise
 
 type Scraper interface {
@@ -25,6 +34,10 @@ type Scraper interface {
 }
 
 func main() {
+	doMain()
+}
+
+func doMain() error {
 	s := ScrapConfig{}
 	path := cfgFileMenu()
 	s.scrapCFG(path)
@@ -35,6 +48,8 @@ func main() {
 	s.scrapHTML()
 	fmt.Printf("Succesfully writen to %s\n", s.ReceiverCSV)
 	fmt.Println("Exiting program")
+
+	return nil
 }
 
 // user chooses the URL to scrap
@@ -70,6 +85,7 @@ func searchWord() string {
 	return query
 }
 
+// environmental variables setup
 func (s *ScrapConfig) scrapCFG(path string) error {
 	file, err := os.ReadFile(path)
 	if err != nil {
@@ -91,6 +107,16 @@ func (s *ScrapConfig) scrapCFG(path string) error {
 			s.ScrapURL = value
 		case "receiverCSV":
 			s.ReceiverCSV = value
+		case "productName":
+			s.ProductName = value
+		case "productPrice":
+			s.ProductPrice = value
+		case "productImage":
+			s.ProductImage = value
+		case "productImageAttributes":
+			s.ProductImageAttributes = value
+		case "goQuery":
+			s.GoQuery = value
 		}
 	}
 	return nil
@@ -114,10 +140,10 @@ func (s *ScrapConfig) writeToCSV(result []string) error {
 func (s *ScrapConfig) scrapHTML() error {
 	c := colly.NewCollector()
 
-	c.OnHTML("div.search-list-item", func(h *colly.HTMLElement) {
-		name := h.Attr("data-product-name")
-		price := h.Attr("data-product-price")
-		imageURL, _ := h.DOM.Find("meta[itemprop=\"image\"]").Attr("content")
+	c.OnHTML(s.GoQuery, func(h *colly.HTMLElement) {
+		name := h.Attr(s.ProductName)
+		price := h.Attr(s.ProductPrice)
+		imageURL, _ := h.DOM.Find(s.ProductImage).Attr(s.ProductImageAttributes)
 		response := []string{name, price, "zł", imageURL}
 		s.writeToCSV(response)
 	})
