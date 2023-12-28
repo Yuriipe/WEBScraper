@@ -25,12 +25,12 @@ func main() {
 	s := ScrapConfig{}
 	path := "empikCfg.json"
 	s.scrapCFG(path)
-	fmt.Printf("This is a header %s\n", s.HeaderCSV)
 
 	header := strings.Split(s.HeaderCSV, ", ")
-	fmt.Println(header)
 	s.writeToCSV(header)
-	fmt.Println("Succesfully writen")
+
+	s.scrapHTML()
+	fmt.Printf("Succesfully writen to %s\n", s.ReceiverCSV)
 	fmt.Println("Exiting program")
 }
 
@@ -75,18 +75,20 @@ func (s *ScrapConfig) writeToCSV(result []string) error {
 	return nil
 }
 
+// scrap required URL and write result into CSV file
 func (s *ScrapConfig) scrapHTML() error {
-	c := colly.NewCollector(
-		colly.AllowedDomains(s.ScrapURL),
-	)
+	c := colly.NewCollector()
 
 	c.OnHTML("div.search-list-item", func(h *colly.HTMLElement) {
 		name := h.Attr("data-product-name")
 		price := h.Attr("data-product-price")
+		imageURL, _ := h.DOM.Find("meta[itemprop=\"image\"]").Attr("content")
+		response := []string{name, price, "zł", imageURL}
+		s.writeToCSV(response)
 	})
 
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println(r.URL.String())
+		fmt.Println("Start scrapping", r.URL.String())
 	})
 
 	err := c.Visit(s.ScrapURL)
