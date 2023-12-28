@@ -17,6 +17,12 @@ type ScrapConfig struct {
 	SearchWord  string `json:"searchWord"`
 }
 
+// add user input for several options:
+// 1. searchword
+// 2. scrapURL choise
+// 3. cronjob possibility
+// 4. output file choise
+
 type Scraper interface {
 	scrapCFG() string
 }
