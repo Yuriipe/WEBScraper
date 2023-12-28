@@ -75,15 +75,23 @@ func (s *ScrapConfig) writeToCSV(result []string) error {
 	return nil
 }
 
-func (s *ScrapConfig) scrapHTML () error{
+func (s *ScrapConfig) scrapHTML() error {
 	c := colly.NewCollector(
 		colly.AllowedDomains(s.ScrapURL),
 	)
 
-	c.OnHTML("div/", func(h *colly.HTMLElement){
-		name := h.Attr("")
-		price := h.Attr("")
+	c.OnHTML("div.search-list-item", func(h *colly.HTMLElement) {
+		name := h.Attr("data-product-name")
+		price := h.Attr("data-product-price")
 	})
 
-	c.
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println(r.URL.String())
+	})
+
+	err := c.Visit(s.ScrapURL)
+	if err != nil {
+		panic("unable to visit URL")
+	}
+	return nil
 }
