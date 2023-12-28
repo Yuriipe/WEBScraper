@@ -1,5 +1,5 @@
 {
     "receiverCSV":"resultLocalDB/empikResult.csv",
-    "scrapURL":"https://www.empik.com/szukaj/produkt?q=slime&qtype=basicForm&trending=true",
+    "scrapURL":"https://www.empik.com/szukaj/produkt?q=",
     "headersCSV":"name, price, currency"
 }

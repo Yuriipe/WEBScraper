@@ -14,22 +14,19 @@ type ScrapConfig struct {
 	ReceiverCSV string `json:"receiverCSV"`
 	ScrapURL    string `json:"scrapURL"`
 	HeaderCSV   string `json:"headersCSV"`
-	SearchWord  string `json:"searchWord"`
 }
 
 // add user input for several options:
-// 1. searchword
-// 2. scrapURL choise
 // 3. cronjob possibility
-// 4. output file choise
+// 4. output file type choise
 
 type Scraper interface {
-	scrapCFG() string
+	scrapCFG()
 }
 
 func main() {
 	s := ScrapConfig{}
-	path := "empikCfg.json"
+	path := cfgFileMenu()
 	s.scrapCFG(path)
 
 	header := strings.Split(s.HeaderCSV, ", ")
@@ -38,6 +35,39 @@ func main() {
 	s.scrapHTML()
 	fmt.Printf("Succesfully writen to %s\n", s.ReceiverCSV)
 	fmt.Println("Exiting program")
+}
+
+// user chooses the URL to scrap
+func cfgFileMenu() string {
+	var choice string
+	fmt.Println("Choose required URL:")
+	fmt.Println("1. empik")
+	fmt.Println("2. amazon")
+	fmt.Println("3. allegro")
+	fmt.Scanln(&choice)
+
+	var result string
+	switch choice {
+	case "1":
+		result = "empikCfg.json"
+		fmt.Println("Running empik scrap")
+	case "2":
+		result = "not available yet"
+		fmt.Println("Not available yet\nExiting")
+		os.Exit(0)
+	case "3":
+		result = "not available yet"
+		fmt.Println("Not available yet\nExiting")
+		os.Exit(0)
+	}
+	return result
+}
+
+func searchWord() string {
+	var query string
+	fmt.Println("What product would you like to search for?\n(for search improvement give one word description)")
+	fmt.Scanln(&query)
+	return query
 }
 
 func (s *ScrapConfig) scrapCFG(path string) error {
@@ -61,13 +91,12 @@ func (s *ScrapConfig) scrapCFG(path string) error {
 			s.ScrapURL = value
 		case "receiverCSV":
 			s.ReceiverCSV = value
-		case "searchWord":
-			s.SearchWord = value
 		}
 	}
 	return nil
 }
 
+// writes result to the empikResult.csv file
 func (s *ScrapConfig) writeToCSV(result []string) error {
 	file, err := os.OpenFile(s.ReceiverCSV, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
 	if err != nil {
@@ -81,7 +110,7 @@ func (s *ScrapConfig) writeToCSV(result []string) error {
 	return nil
 }
 
-// scrap required URL and write result into CSV file
+// scraps required URL
 func (s *ScrapConfig) scrapHTML() error {
 	c := colly.NewCollector()
 
@@ -97,7 +126,9 @@ func (s *ScrapConfig) scrapHTML() error {
 		fmt.Println("Start scrapping", r.URL.String())
 	})
 
-	err := c.Visit(s.ScrapURL)
+	query := []string{s.ScrapURL, searchWord()}
+
+	err := c.Visit(strings.Join(query, ""))
 	if err != nil {
 		panic("unable to visit URL")
 	}
